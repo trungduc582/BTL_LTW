@@ -1,0 +1,109 @@
+<?php
+    include './header.php'; include '../config.php';?> 
+    <!DOCTYPE html>
+<html>
+
+ <head>
+    <title>Thực hiện cập nhật sản phẩm</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+    <script>tinymce.init({selector:'textarea'});</script>
+</head>
+<body>
+	<?php
+		// 1. KẾT NỐI ĐẾN CSDL
+
+		// 2. Lấy ra dữ liệu thu được từ FORM trước chuyển sang
+		$ma_san_pham=$_POST["ma_san_pham"];
+		$ma_loai_san_pham = $_POST["optLoaiSanPham"];
+		$ten_san_pham = $_POST["ten_san_pham"];
+		$khoi_luong = $_POST["khoi_luong"];
+		$gia_nhap = $_POST["gia_nhap"];
+		$gia_ban = $_POST["gia_ban"];
+		$giam_gia = $_POST["giam_gia"];
+		$mo_ta_ngan_gon = $_POST["mo_ta_ngan_gon"];
+		$mo_ta = $_POST["mo_ta"];
+
+		// Xử lý ảnh minh họa
+		$name=basename($_FILES["anh_minh_hoa"]["name"]);
+		$anh_minh_hoa="../img/product/".basename($_FILES["anh_minh_hoa"]["name"]);
+		$file_anh_tam=$_FILES["anh_minh_hoa"]["tmp_name"];
+		$result=move_uploaded_file($file_anh_tam,$anh_minh_hoa);
+		if(!$result)
+			$anh_minh_hoa=null;
+ 		
+ 		//Xử lý ảnh mô tả
+		if(isset($_FILES['anh_mo_ta']))
+		{
+			
+			$file=$_FILES['anh_mo_ta'];
+			$file_name=$file['name'];
+			if(!empty($file_name[0]))
+			{
+
+				mysqli_query($con,"DELETE from tbl_anh_mo_ta where ma_san_pham='".$ma_san_pham."'");
+				foreach ($file_name as $key => $value) 
+				{
+					move_uploaded_file($file['tmp_name'][$key], "../img/product/details/".$value);
+				}
+				foreach ($file_name as $key => $value) 
+				{
+					mysqli_query($con,"INSERT INTO tbl_anh_mo_ta (ma_san_pham, anh) VALUES('".$ma_san_pham."', '".$value."')");
+				}
+			}
+		}
+		// 3. Viết câu lệnh SQL để thêm mới tin tức vào bảng tbl_san_pham
+		$sql = "
+			UPDATE `tbl_san_pham` SET `ma_loai_san_pham`='".$ma_loai_san_pham."',`ten_san_pham`='".$ten_san_pham."',`gia_nhap`='".$gia_nhap."',`gia_ban`='".$gia_ban."',`mo_ta_ngan_gon`='".$mo_ta_ngan_gon."',`mo_ta`='".$mo_ta."'";
+		if($giam_gia != NULL) {
+			$sql = $sql.",`giam_gia`='".$giam_gia."'";
+		}
+		if($khoi_luong != NULL) {
+			$sql = $sql.",`khoi_luong`='".$khoi_luong."'";
+		}
+		if($anh_minh_hoa != NULL) {
+			$sql = $sql.",`anh_minh_hoa`='".$name."'";
+		}
+		$sql = $sql." WHERE `tbl_san_pham`.`ma_san_pham`='".$ma_san_pham."'";
+
+		// echo $sql; exit();
+
+		// 4. Thực hiện truy vấn để thêm mới san pham
+		$result = mysqli_query($con, $sql);
+
+		//$id_pro=mysqli_insert_id($con);
+		
+		
+
+		// 5. Thông báo việc thêm mới san pham thành công & đẩy người dùng quay về trang quan trị san pham
+		if ($result) {
+			echo 
+			"
+				<script type='text/javascript'>
+					window.alert('Bạn đã cập nhật sản phẩm thành công!');
+				</script>
+			";
+			echo 
+			"
+				<script type='text/javascript'>
+					window.location.href='./quan_tri_san_pham.php'
+				</script>
+			";
+		} else {
+			echo 
+			"
+				<script type='text/javascript'>
+					window.alert('Cập nhật sản phẩm thất bại!');
+				</script>
+			";
+			echo 
+			"
+				<script type='text/javascript'>
+					window.history.back();
+				</script>
+			";
+		}
+	;?>
+</body>
+</html>
